@@ -1,36 +1,33 @@
-# 📝 Initial Setup
-
-## 🚀 1. Cách Cài Đặt Redis (Chọn Một)
-
-Bạn có thể thiết lập Redis theo hai cách chính:
-
-| **Phương thức**   | **Mô tả**                                              |
-|-------------------|--------------------------------------------------------|
-| Redis Cloud       | Tạo instance trên [redis.com](https://redis.com)       |
-| Cài đặt cục bộ    | Cài đặt và chạy trên máy tính cá nhân (hướng dẫn chi tiết sẽ có sau trong khóa học) |
-
-📌 **Lưu ý:** Chọn một phương thức phù hợp với nhu cầu của bạn.
+# 📝 Basic Commands
 
 ---
 
-## 💡2. Subscription Là Gì Trong Redis Cloud?
+## 🔑 1. Lệnh Cơ Bản Với Kiểu String
 
-Subscription trong Redis Cloud là gói dịch vụ bạn đăng ký để sử dụng tài nguyên như bộ nhớ, băng thông, và số lượng database.
+Redis hỗ trợ kiểu dữ liệu String với các lệnh phổ biến như **SET** và **GET**:
 
-Mỗi subscription có giới hạn tài nguyên và chi phí khác nhau, tùy thuộc vào quy mô ứng dụng (Free, Standard, Premium).
+**SET:** Lưu giá trị vào key
 
-Ví dụ: Subscription Free phù hợp cho thử nghiệm, trong khi Premium hỗ trợ doanh nghiệp với hiệu năng cao.
+```shell
+SET message "Hi there!"
+```
+-> Redis trả về: `OK`
 
-📌 **Lưu ý:** Đăng ký subscription trên Redis Cloud để kích hoạt instance và quản lý tài nguyên hiệu quả.
+**GET:** Truy xuất giá trị từ key
+
+```shell
+GET message
+```
+-> Redis trả về: `"Hi there!"`
 
 ---
 
-## 3. 📌 Tóm Tắt Quan Trọng
+## 📌 2. Tóm Tắt Quan Trọng
 
-✅ Chọn cài đặt qua Redis Cloud hoặc cục bộ.
+✅ SET lưu giá trị vào key, trả về OK.
 
-✅ Subscription định nghĩa tài nguyên và chi phí trong Redis Cloud.
+✅ GET truy xuất giá trị từ key.
 
 ---
 
-### 🚀 **Bắt đầu với cách phù hợp với dự án của bạn!**
+### 🚀 Dùng String cho dữ liệu đơn giản như chuỗi hoặc số!
