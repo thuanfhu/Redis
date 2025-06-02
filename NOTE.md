@@ -1,79 +1,133 @@
-# ⏳ Use Case of Expiration Options
+# 🗝️ Setting Multiple Keys
 
-## 📝 1. Tổng Quan Về Tùy Chọn Hết Hạn (Expiration Options)
+## 📝 1. Tổng Quan Về Lệnh Đặt Nhiều Key
 
-Tùy chọn hết hạn trong Redis (như `EX`, `PX`, `EXAT`, `PXAT`, `KEEPTTL`) cho phép đặt thời gian sống (TTL) cho một key, rất hữu ích trong các trường hợp cần tự động xóa dữ liệu sau một khoảng thời gian.
+Redis cung cấp các lệnh như `MSET`, `MSETNX`, `SETNX`, và `SETEX` để đặt giá trị cho nhiều key, hoặc đặt key với điều kiện, bao gồm cả thời gian hết hạn. Các lệnh này rất hữu ích khi cần thao tác đồng thời trên nhiều key.
 
-| **Tùy Chọn** | **Ý Nghĩa**                          | **Ví Dụ Lệnh**                        |
-|--------------|--------------------------------------|---------------------------------------|
-| `EX`         | Hết hạn sau số giây                  | `SET key value EX 3600`               |
-| `PX`         | Hết hạn sau số mili giây             | `SET key value PX 3600000`            |
-| `EXAT`       | Hết hạn tại timestamp (giây)         | `SET key value EXAT 1625097600`       |
-| `PXAT`       | Hết hạn tại timestamp (mili giây)    | `SET key value PXAT 1625097600000`    |
-| `KEEPTTL`    | Giữ TTL hiện tại nếu key đã có       | `SET key value KEEPTTL`               |
-
----
-
-## 💡 2. Use Case Thực Tế Của Expiration Options
-
-**2.1. Quản Lý Cache Tạm Thời**
-
-- Mục đích: Lưu trữ dữ liệu cache với thời gian sống giới hạn.
-
-- Ví dụ: Lưu kết quả truy vấn API trong 1 giờ.
-  ```sh
-  SET cache_key api_result EX 3600
-  ```
-
-- Lợi ích: Tự động xóa cache khi hết hạn, đảm bảo dữ liệu luôn cập nhật.
+| **Lệnh**   | **Ý Nghĩa**                                         |
+|------------|-----------------------------------------------------|
+| `MSET`     | Đặt giá trị cho nhiều key cùng lúc                  |
+| `MSETNX`   | Đặt nhiều key chỉ khi **tất cả key chưa tồn tại**   |
+| `SETNX`    | Đặt giá trị cho một key chỉ khi **key chưa tồn tại**|
+| `SETEX`    | Đặt giá trị cho một key với thời gian hết hạn (giây)|
 
 ---
 
-**2.2. Xử Lý Token Tạm Thời**
+## ⚙️ 2. Cú Pháp và Cách Sử Dụng
 
-- Mục đích: Tạo token hết hạn cho xác thực (authentication).
+**2.1. Lệnh `MSET`**
 
-- Ví dụ: Đặt token hết hạn sau 15 phút.
-  ```sh
-  SET user_token token_value PX 900000
-  ```
+Cú pháp:
+```sh
+MSET key1 value1 key2 value2 ... keyN valueN
+```
 
-- Lợi ích: Tăng bảo mật bằng cách tự động xóa token không còn hiệu lực.
+-> Mô tả: Đặt giá trị cho nhiều key cùng lúc, ghi đè nếu key đã tồn tại.
 
----
+Ví dụ:
+```sh
+MSET color red car toyota
+```
 
-**2.3. Quản Lý Phiên Tạm Thời (Session Management)**
-
-- Mục đích: Lưu trữ phiên người dùng với thời gian sống nhất định.
-
-- Ví dụ: Đặt phiên hết hạn sau 30 phút.
-  ```sh
-  SET session_id session_data EX 1800
-  ```
-
-- Lợi ích: Giảm tải tài nguyên bằng cách tự động dọn dẹp phiên cũ.
+-> Kết quả: Key `color` có giá trị `red`, key `car` có giá trị `toyota`.
 
 ---
 
-## ⚠️ 3. Lưu Ý Quan Trọng
+**2.2. Lệnh `MSETNX`**
 
-- Không có `EX`/`PX`: Key sẽ tồn tại vô thời hạn trừ khi thủ công xóa (`DEL`).
+Cú pháp:
+```sh
+MSETNX key1 value1 key2 value2 ... keyN valueN
+```
 
-- Kết hợp `NX`: Chỉ đặt key nếu chưa tồn tại, hữu ích cho khóa phân phối (distributed locks).
+-> Mô tả: Chỉ đặt giá trị nếu **tất cả key đều chưa tồn tại**. Nếu một key đã tồn tại, không key nào được đặt.
+
+Ví dụ:
+```sh
+MSETNX color red car toyota
+```
+
+-> Nếu `color` hoặc `car` đã tồn tại, lệnh sẽ không thực hiện.
+
+---
+
+**2.3. Lệnh `SETNX`**
+
+Cú pháp:
+```sh
+SETNX key value
+```
+
+-> Mô tả: Tương đương `SET key value NX`, chỉ đặt nếu key chưa tồn tại.
+
+Ví dụ:
+```sh
+SETNX color red
+```
+
+Tương đương:
+```sh
+SET color red NX
+```
+
+-> Nếu `color` đã tồn tại, lệnh sẽ không thay đổi giá trị.
+
+---
+
+**2.4. Lệnh `SETEX`**
+
+Cú pháp:
+```sh
+SETEX key seconds value
+```
+
+-> Mô tả: Tương đương `SET key value EX seconds`, đặt giá trị cho key và tự động hết hạn sau số giây chỉ định.
+
+Ví dụ:
+```sh
+SETEX color 2 red
+```
+
+Tương đương:
+```sh
+SET color red EX 2
+```
+
+-> Key `color` sẽ có giá trị `red` và tự động hết hạn sau 2 giây.
+
+---
+
+## 💡 3. Use Case Thực Tế
+
+- Lưu trữ thông tin cấu hình:
   ```sh
-  SET lock_key value EX 10 NX
+  MSET app_version 1.0.0 app_name myapp
   ```
 
-- Kiểm tra TTL: Dùng `TTL key` để xem thời gian sống còn lại (giây).
+- Khóa phân phối (Distributed Lock) với `SETNX`:
+  ```sh
+  SETNX lock_key 1
+  ```
+  -> Chỉ thành công nếu `lock_key` chưa tồn tại.
+
+- Lưu trữ tạm thời với `SETEX`:
+  ```sh
+  SETEX session_key 1800 session_data
+  ```
+  -> Lưu phiên người dùng với thời gian sống 30 phút.
 
 ---
 
 ## 📌 4. Tóm Tắt
 
-✅ **Expiration Options** (`EX`, `PX`, `EXAT`, `PXAT`, `KEEPTTL`) giúp tự động xóa key sau thời gian quy định.
+✅ `MSET`: Đặt nhiều key cùng lúc, ghi đè nếu key đã tồn tại.
 
-✅ **Use Case**: Cache tạm thời, token, quản lý phiên.
+✅ `MSETNX`: Đặt nhiều key chỉ khi tất cả chưa tồn tại.
 
-✅ **Lưu ý**: Kết hợp `NX` cho khóa phân phối, kiểm tra TTL bằng `TTL`.
+✅ `SETNX`: Đặt một key chỉ khi chưa tồn tại, tương đương `SET ... NX`.
+
+✅ `SETEX`: Đặt một key với thời gian hết hạn, tương đương `SET ... EX`.
+
+✅ **Use Case**: Cấu hình, khóa phân phối, lưu trữ tạm thời.
 
 ---
