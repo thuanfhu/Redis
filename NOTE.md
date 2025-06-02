@@ -1,133 +1,72 @@
-# 🗝️ Setting Multiple Keys
+# 🔎 GET and MGET
 
-## 📝 1. Tổng Quan Về Lệnh Đặt Nhiều Key
+## 📝 1. Tổng Quan Về Lệnh Lấy Giá Trị
 
-Redis cung cấp các lệnh như `MSET`, `MSETNX`, `SETNX`, và `SETEX` để đặt giá trị cho nhiều key, hoặc đặt key với điều kiện, bao gồm cả thời gian hết hạn. Các lệnh này rất hữu ích khi cần thao tác đồng thời trên nhiều key.
+Redis cung cấp các lệnh `GET` và `MGET` để lấy giá trị từ một hoặc nhiều key. Đây là các lệnh cơ bản để truy xuất dữ liệu trong Redis.
 
-| **Lệnh**   | **Ý Nghĩa**                                         |
-|------------|-----------------------------------------------------|
-| `MSET`     | Đặt giá trị cho nhiều key cùng lúc                  |
-| `MSETNX`   | Đặt nhiều key chỉ khi **tất cả key chưa tồn tại**   |
-| `SETNX`    | Đặt giá trị cho một key chỉ khi **key chưa tồn tại**|
-| `SETEX`    | Đặt giá trị cho một key với thời gian hết hạn (giây)|
+| **Lệnh** | **Ý Nghĩa**                        |
+|----------|------------------------------------|
+| `GET`    | Lấy giá trị của một key duy nhất   |
+| `MGET`   | Lấy giá trị của nhiều key cùng lúc |
 
 ---
 
 ## ⚙️ 2. Cú Pháp và Cách Sử Dụng
 
-**2.1. Lệnh `MSET`**
+**GET**
 
 Cú pháp:
 ```sh
-MSET key1 value1 key2 value2 ... keyN valueN
+GET key
 ```
-
--> Mô tả: Đặt giá trị cho nhiều key cùng lúc, ghi đè nếu key đã tồn tại.
+-> Mô tả: Lấy giá trị của key được chỉ định. Nếu key không tồn tại, trả về `nil`.
 
 Ví dụ:
 ```sh
-MSET color red car toyota
+GET color
 ```
-
--> Kết quả: Key `color` có giá trị `red`, key `car` có giá trị `toyota`.
+-> Giả sử `color` có giá trị `red`, kết quả trả về: `red`.
 
 ---
 
-**2.2. Lệnh `MSETNX`**
+**MGET**
 
 Cú pháp:
 ```sh
-MSETNX key1 value1 key2 value2 ... keyN valueN
+MGET key1 key2 ... keyN
 ```
-
--> Mô tả: Chỉ đặt giá trị nếu **tất cả key đều chưa tồn tại**. Nếu một key đã tồn tại, không key nào được đặt.
+-> Mô tả: Lấy giá trị của nhiều key cùng lúc. Nếu key không tồn tại, trả về `nil` cho key đó.
 
 Ví dụ:
 ```sh
-MSETNX color red car toyota
+MGET color model
 ```
-
--> Nếu `color` hoặc `car` đã tồn tại, lệnh sẽ không thực hiện.
-
----
-
-**2.3. Lệnh `SETNX`**
-
-Cú pháp:
-```sh
-SETNX key value
-```
-
--> Mô tả: Tương đương `SET key value NX`, chỉ đặt nếu key chưa tồn tại.
-
-Ví dụ:
-```sh
-SETNX color red
-```
-
-Tương đương:
-```sh
-SET color red NX
-```
-
--> Nếu `color` đã tồn tại, lệnh sẽ không thay đổi giá trị.
-
----
-
-**2.4. Lệnh `SETEX`**
-
-Cú pháp:
-```sh
-SETEX key seconds value
-```
-
--> Mô tả: Tương đương `SET key value EX seconds`, đặt giá trị cho key và tự động hết hạn sau số giây chỉ định.
-
-Ví dụ:
-```sh
-SETEX color 2 red
-```
-
-Tương đương:
-```sh
-SET color red EX 2
-```
-
--> Key `color` sẽ có giá trị `red` và tự động hết hạn sau 2 giây.
+-> Giả sử `color` có giá trị `red` và `model` có giá trị `toyota`, kết quả trả về: `red toyota`. Nếu `model` không tồn tại, kết quả sẽ là: `red nil`.
 
 ---
 
 ## 💡 3. Use Case Thực Tế
 
-- Lưu trữ thông tin cấu hình:
-  ```sh
-  MSET app_version 1.0.0 app_name myapp
-  ```
+Truy xuất thông tin người dùng:
+```sh
+MGET user:name user:age
+```
+-> Lấy tên và tuổi của người dùng cùng lúc.
 
-- Khóa phân phối (Distributed Lock) với `SETNX`:
-  ```sh
-  SETNX lock_key 1
-  ```
-  -> Chỉ thành công nếu `lock_key` chưa tồn tại.
-
-- Lưu trữ tạm thời với `SETEX`:
-  ```sh
-  SETEX session_key 1800 session_data
-  ```
-  -> Lưu phiên người dùng với thời gian sống 30 phút.
+Kiểm tra trạng thái với `GET`:
+```sh
+GET status
+```
+-> Kiểm tra trạng thái hệ thống (ví dụ: `online` hoặc `offline`).
 
 ---
 
 ## 📌 4. Tóm Tắt
 
-✅ `MSET`: Đặt nhiều key cùng lúc, ghi đè nếu key đã tồn tại.
+✅ `GET`: Lấy giá trị của một key, trả về `nil` nếu key không tồn tại.
 
-✅ `MSETNX`: Đặt nhiều key chỉ khi tất cả chưa tồn tại.
+✅ `MGET`: Lấy giá trị của nhiều key cùng lúc, trả về `nil` cho key không tồn tại.
 
-✅ `SETNX`: Đặt một key chỉ khi chưa tồn tại, tương đương `SET ... NX`.
-
-✅ `SETEX`: Đặt một key với thời gian hết hạn, tương đương `SET ... EX`.
-
-✅ **Use Case**: Cấu hình, khóa phân phối, lưu trữ tạm thời.
+✅ **Use Case**: Truy xuất thông tin người dùng, kiểm tra trạng thái.
 
 ---
