@@ -1,72 +1,106 @@
-# 🔎 GET and MGET
+# 🧩 String Ranges
 
-## 📝 1. Tổng Quan Về Lệnh Lấy Giá Trị
+## 📝 1. Tổng Quan Về String Ranges
 
-Redis cung cấp các lệnh `GET` và `MGET` để lấy giá trị từ một hoặc nhiều key. Đây là các lệnh cơ bản để truy xuất dữ liệu trong Redis.
+Redis cung cấp các lệnh `GETRANGE`, `SETRANGE`, và `DEL` để thao tác với chuỗi (string) bằng cách trích xuất, cập nhật, hoặc xóa key chứa chuỗi. Đây là các lệnh hữu ích khi làm việc với dữ liệu dạng chuỗi.
 
-| **Lệnh** | **Ý Nghĩa**                        |
-|----------|------------------------------------|
-| `GET`    | Lấy giá trị của một key duy nhất   |
-| `MGET`   | Lấy giá trị của nhiều key cùng lúc |
+| **Lệnh**    | **Ý Nghĩa**                              |
+|-------------|------------------------------------------|
+| `GETRANGE`  | Trích xuất một đoạn chuỗi từ key         |
+| `SETRANGE`  | Cập nhật một phần của chuỗi trong key    |
+| `DEL`       | Xóa một hoặc nhiều key hoàn toàn         |
 
 ---
 
 ## ⚙️ 2. Cú Pháp và Cách Sử Dụng
 
-### 2.1. Lệnh `GET`
+### 2.1. Lệnh `GETRANGE`
 
 Cú pháp:
 ```sh
-GET key
+GETRANGE key start end
 ```
--> Mô tả: Lấy giá trị của key được chỉ định. Nếu key không tồn tại, trả về `nil`.
+
+-> Mô tả: Trích xuất một đoạn chuỗi từ key, với `start` và `end` là chỉ số (index) dựa trên 0. Chỉ số âm tính tính từ cuối chuỗi.
 
 Ví dụ:
 ```sh
-GET color
+GETRANGE color 0 3
 ```
--> Giả sử `color` có giá trị `red`, kết quả trả về: `red`.
+
+-> Giả sử `color` có giá trị `redblue`, kết quả trả về: `redb`.
 
 ---
 
-### 2.2. Lệnh `MGET`
+### 2.2. Lệnh `SETRANGE`
 
 Cú pháp:
 ```sh
-MGET key1 key2 ... keyN
+SETRANGE key offset value
 ```
--> Mô tả: Lấy giá trị của nhiều key cùng lúc. Nếu key không tồn tại, trả về `nil` cho key đó.
+
+-> Mô tả: Thay thế hoặc mở rộng chuỗi tại vị trí `offset` bằng `value`. Nếu chuỗi ngắn hơn `offset`, sẽ được padding bằng ký tự null (`\x00`).
 
 Ví dụ:
 ```sh
-MGET color model
+SETRANGE color 2 blue
 ```
--> Giả sử `color` có giá trị `red` và `model` có giá trị `toyota`, kết quả trả về: `red toyota`. Nếu `model` không tồn tại, kết quả sẽ là: `red nil`.
+
+-> Giả sử `color` có giá trị `red`, kết quả sẽ là `reblue` (thay thế từ vị trí 2).
+
+---
+
+### 2.3. Lệnh `DEL`
+
+Cú pháp:
+```sh
+DEL key1 [key2 ... keyN]
+```
+
+-> Mô tả: Xóa một hoặc nhiều key, bao gồm cả key chứa chuỗi, cùng với giá trị của chúng. Trả về số key đã xóa thành công.
+
+Ví dụ:
+```sh
+DEL color
+```
+
+-> Xóa key `color` cùng giá trị của nó, trả về `1` nếu xóa thành công, `0` nếu key không tồn tại.
 
 ---
 
 ## 💡 3. Use Case Thực Tế
 
-Truy xuất thông tin người dùng:
+Trích xuất thông tin:
 ```sh
-MGET user:name user:age
+GETRANGE user_data 0 5
 ```
--> Lấy tên và tuổi của người dùng cùng lúc.
 
-Kiểm tra trạng thái với `GET`:
+-> Lấy 6 ký tự đầu của dữ liệu người dùng.
+
+Cập nhật một phần:
 ```sh
-GET status
+SETRANGE status 0 active
 ```
--> Kiểm tra trạng thái hệ thống (ví dụ: `online` hoặc `offline`).
+
+-> Cập nhật trạng thái từ vị trí 0.
+
+Xóa dữ liệu không cần thiết:
+```sh
+DEL temp_key
+```
+
+-> Xóa key tạm thời khi không còn sử dụng.
 
 ---
 
 ## 📌 4. Tóm Tắt
 
-✅ `GET`: Lấy giá trị của một key, trả về `nil` nếu key không tồn tại.
+✅ `GETRANGE`: Trích xuất đoạn chuỗi từ `start` đến `end`.
 
-✅ `MGET`: Lấy giá trị của nhiều key cùng lúc, trả về `nil` cho key không tồn tại.
+✅ `SETRANGE`: Cập nhật chuỗi tại `offset` với `value`.
 
-✅ **Use Case**: Truy xuất thông tin người dùng, kiểm tra trạng thái.
+✅ `DEL`: Xóa một hoặc nhiều key hoàn toàn.
+
+✅ **Use Case**: Trích xuất thông tin, cập nhật một phần, xóa dữ liệu.
 
 ---
