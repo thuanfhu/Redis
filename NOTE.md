@@ -1,106 +1,146 @@
-# 🧩 String Ranges
+# 🔢 Dealing with Numbers
 
-## 📝 1. Tổng Quan Về String Ranges
+## 📝 1. Tổng Quan Về Xử Lý Số Trong Redis
 
-Redis cung cấp các lệnh `GETRANGE`, `SETRANGE`, và `DEL` để thao tác với chuỗi (string) bằng cách trích xuất, cập nhật, hoặc xóa key chứa chuỗi. Đây là các lệnh hữu ích khi làm việc với dữ liệu dạng chuỗi.
+Redis hỗ trợ `các lệnh để làm việc với số`, như tăng, giảm hoặc truy xuất giá trị số, mặc dù Redis lưu trữ số dưới dạng chuỗi (string). Ví dụ: `SET age 22` sẽ lưu giá trị `"22"`, và `GET age` sẽ trả về `"22"`. Các lệnh số sẽ tự động chuyển đổi chuỗi này thành số để xử lý, nhưng nếu key không chứa giá trị số hợp lệ, lệnh sẽ báo lỗi.
 
-| **Lệnh**    | **Ý Nghĩa**                              |
-|-------------|------------------------------------------|
-| `GETRANGE`  | Trích xuất một đoạn chuỗi từ key         |
-| `SETRANGE`  | Cập nhật một phần của chuỗi trong key    |
-| `DEL`       | Xóa một hoặc nhiều key hoàn toàn         |
+| **Lệnh**      | **Ý Nghĩa**                                |
+|---------------|--------------------------------------------|
+| `INCR`        | Tăng giá trị số của key lên 1              |
+| `DECR`        | Giảm giá trị số của key xuống 1            |
+| `INCRBY`      | Tăng giá trị số của key lên một số nguyên  |
+| `DECRBY`      | Giảm giá trị số của key xuống một số nguyên|
+| `INCRBYFLOAT` | Tăng giá trị số của key lên một số thập phân|
+
+⚠️ **Lưu ý**: Sử dụng các lệnh số trên key chứa giá trị không phải số (ví dụ: chuỗi chữ) sẽ gây lỗi.
 
 ---
 
 ## ⚙️ 2. Cú Pháp và Cách Sử Dụng
 
-### 2.1. Lệnh `GETRANGE`
+### 2.1. Lệnh `INCR`
 
 Cú pháp:
 ```sh
-GETRANGE key start end
+INCR key
 ```
 
--> Mô tả: Trích xuất một đoạn chuỗi từ key, với `start` và `end` là chỉ số (index) dựa trên 0. Chỉ số âm tính tính từ cuối chuỗi.
+-> Mô tả: Tăng giá trị số của key lên 1. Nếu key không tồn tại, Redis khởi tạo giá trị là `0` rồi tăng lên `1`.
 
 Ví dụ:
 ```sh
-GETRANGE color 0 3
+INCR age
 ```
 
--> Giả sử `color` có giá trị `redblue`, kết quả trả về: `redb`.
+-> Giả sử `age` có giá trị `"10"`, kết quả trả về: `11` (lưu dưới dạng `"11"`).
 
 ---
 
-### 2.2. Lệnh `SETRANGE`
+### 2.2. Lệnh `DECR`
 
 Cú pháp:
 ```sh
-SETRANGE key offset value
+DECR key
 ```
 
--> Mô tả: Thay thế hoặc mở rộng chuỗi tại vị trí `offset` bằng `value`. Nếu chuỗi ngắn hơn `offset`, sẽ được padding bằng ký tự null (`\x00`).
+-> Mô tả: Giảm giá trị số của key xuống 1. Nếu key không tồn tại, Redis khởi tạo giá trị là `0` rồi giảm xuống `-1`.
 
 Ví dụ:
 ```sh
-SETRANGE color 2 blue
+DECR age
 ```
 
--> Giả sử `color` có giá trị `red`, kết quả sẽ là `reblue` (thay thế từ vị trí 2).
+-> Giả sử `age` có giá trị `"10"`, kết quả trả về: `9` (lưu dưới dạng `"9"`).
 
 ---
 
-### 2.3. Lệnh `DEL`
+### 2.3. Lệnh `INCRBY`
 
 Cú pháp:
 ```sh
-DEL key1 [key2 ... keyN]
+INCRBY key increment
 ```
 
--> Mô tả: Xóa một hoặc nhiều key, bao gồm cả key chứa chuỗi, cùng với giá trị của chúng. Trả về số key đã xóa thành công.
+-> Mô tả: Tăng giá trị số của key lên một số nguyên `increment`. Nếu key không tồn tại, Redis khởi tạo giá trị là `0` rồi tăng.
 
 Ví dụ:
 ```sh
-DEL color
+INCRBY age 10
 ```
 
--> Xóa key `color` cùng giá trị của nó, trả về `1` nếu xóa thành công, `0` nếu key không tồn tại.
+-> Giả sử `age` có giá trị `"10"`, kết quả trả về: `20` (lưu dưới dạng `"20"`).
+
+---
+
+### 2.4. Lệnh `DECRBY`
+
+Cú pháp:
+```sh
+DECRBY key decrement
+```
+
+-> Mô tả: Giảm giá trị số của key xuống một số nguyên `decrement`. Nếu key không tồn tại, Redis khởi tạo giá trị là `0` rồi giảm.
+
+Ví dụ:
+```sh
+DECRBY age 12
+```
+
+-> Giả sử `age` có giá trị `"20"`, kết quả trả về: `8` (lưu dưới dạng `"8"`).
+
+---
+
+### 2.5. Lệnh `INCRBYFLOAT`
+
+Cú pháp:
+```sh
+INCRBYFLOAT key increment
+```
+
+-> Mô tả: Tăng giá trị số của key lên một số thập phân `increment`. Nếu key không tồn tại, Redis khởi tạo giá trị là `0` rồi tăng.
+
+Ví dụ:
+```sh
+INCRBYFLOAT age 6.400145
+```
+
+-> Giả sử `age` có giá trị `"10"`, kết quả trả về: `16.400145` (lưu dưới dạng `"16.400145"`).
 
 ---
 
 ## 💡 3. Use Case Thực Tế
 
-Trích xuất thông tin:
-```sh
-GETRANGE user_data 0 5
-```
+- Đếm số lượt truy cập:
+  ```sh
+  INCR visits
+  ```
 
--> Lấy 6 ký tự đầu của dữ liệu người dùng.
+- Giảm số lượng hàng tồn kho:
+  ```sh
+  DECRBY stock 5
+  ```
 
-Cập nhật một phần:
-```sh
-SETRANGE status 0 active
-```
-
--> Cập nhật trạng thái từ vị trí 0.
-
-Xóa dữ liệu không cần thiết:
-```sh
-DEL temp_key
-```
-
--> Xóa key tạm thời khi không còn sử dụng.
+- Tính điểm số với số thập phân:
+  ```sh
+  INCRBYFLOAT score 2.5
+  ```
 
 ---
 
 ## 📌 4. Tóm Tắt
 
-✅ `GETRANGE`: Trích xuất đoạn chuỗi từ `start` đến `end`.
+✅ `INCR`: Tăng giá trị số lên 1.
 
-✅ `SETRANGE`: Cập nhật chuỗi tại `offset` với `value`.
+✅ `DECR`: Giảm giá trị số xuống 1.
 
-✅ `DEL`: Xóa một hoặc nhiều key hoàn toàn.
+✅ `INCRBY`: Tăng giá trị số lên một số nguyên.
 
-✅ **Use Case**: Trích xuất thông tin, cập nhật một phần, xóa dữ liệu.
+✅ `DECRBY`: Giảm giá trị số xuống một số nguyên.
+
+✅ `INCRBYFLOAT`: Tăng giá trị số lên một số thập phân.
+
+✅ **Lưu ý**: Số được lưu dưới dạng chuỗi, lỗi nếu key không chứa giá trị số hợp lệ.
+
+✅ **Use Case**: Đếm lượt truy cập, quản lý kho, tính điểm số.
 
 ---
