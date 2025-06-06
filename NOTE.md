@@ -1,18 +1,17 @@
-# 🔢 Dealing with Numbers
+# 🔄 Atomic Incrementation with INCR
 
-## 📝 1. Tổng Quan Về Xử Lý Số Trong Redis
+## 📝 1. Tổng Quan Về Tính Nguyên Tử Với INCR
 
-Redis hỗ trợ `các lệnh để làm việc với số`, như tăng, giảm hoặc truy xuất giá trị số, mặc dù Redis lưu trữ số dưới dạng chuỗi (string). Ví dụ: `SET age 22` sẽ lưu giá trị `"22"`, và `GET age` sẽ trả về `"22"`. Các lệnh số sẽ tự động chuyển đổi chuỗi này thành số để xử lý, nhưng nếu key không chứa giá trị số hợp lệ, lệnh sẽ báo lỗi.
+Redis là `hệ thống luồng đơn (single-threaded), xử lý tất cả lệnh một cách đồng bộ, chỉ thực hiện một lệnh tại một thời điểm`. Lệnh `INCR` cung cấp cách tăng giá trị số nguyên tử (atomic increment)
 
-| **Lệnh**      | **Ý Nghĩa**                                |
-|---------------|--------------------------------------------|
-| `INCR`        | Tăng giá trị số của key lên 1              |
-| `DECR`        | Giảm giá trị số của key xuống 1            |
-| `INCRBY`      | Tăng giá trị số của key lên một số nguyên  |
-| `DECRBY`      | Giảm giá trị số của key xuống một số nguyên|
-| `INCRBYFLOAT` | Tăng giá trị số của key lên một số thập phân|
+Ví dụ: Khi cập nhật số lượng upvote cho bài post. So với phương pháp thủ công (GET, tăng giá trị, SET), `INCR` đảm bảo độ chính xác trong môi trường đa người dùng.
 
-⚠️ **Lưu ý**: Sử dụng các lệnh số trên key chứa giá trị không phải số (ví dụ: chuỗi chữ) sẽ gây lỗi.
+| **Phương Pháp** | **Ý Nghĩa**                          |
+|-----------------|--------------------------------------|
+| `INCR`          | Tăng giá trị số nguyên tử lên 1      |
+| `GET + SET`     | Lấy, tăng thủ công, và đặt lại giá trị |
+
+⚠️ **Lưu ý**: Sử dụng `GET + SET` trong trường hợp đồng thời có thể dẫn đến sai lệch dữ liệu.
 
 ---
 
@@ -25,122 +24,48 @@ Cú pháp:
 INCR key
 ```
 
--> Mô tả: Tăng giá trị số của key lên 1. Nếu key không tồn tại, Redis khởi tạo giá trị là `0` rồi tăng lên `1`.
+-> Mô tả: Tăng giá trị số của key lên 1 một cách nguyên tử. Nếu key không tồn tại, Redis khởi tạo giá trị là `0` rồi tăng lên `1`.
 
 Ví dụ:
 ```sh
-INCR age
+INCR upvotes
 ```
 
--> Giả sử `age` có giá trị `"10"`, kết quả trả về: `11` (lưu dưới dạng `"11"`).
+-> Giả sử `upvotes` có giá trị `"20"`, kết quả trả về: `21` (lưu dưới dạng `"21"`).
 
 ---
 
-### 2.2. Lệnh `DECR`
+### 2.2. So Sánh Với `GET + SET`
 
-Cú pháp:
+Cú pháp thủ công:
 ```sh
-DECR key
+GET upvotes
+SET upvotes <new_value>
 ```
 
--> Mô tả: Giảm giá trị số của key xuống 1. Nếu key không tồn tại, Redis khởi tạo giá trị là `0` rồi giảm xuống `-1`.
-
-Ví dụ:
-```sh
-DECR age
-```
-
--> Giả sử `age` có giá trị `"10"`, kết quả trả về: `9` (lưu dưới dạng `"9"`).
-
----
-
-### 2.3. Lệnh `INCRBY`
-
-Cú pháp:
-```sh
-INCRBY key increment
-```
-
--> Mô tả: Tăng giá trị số của key lên một số nguyên `increment`. Nếu key không tồn tại, Redis khởi tạo giá trị là `0` rồi tăng.
-
-Ví dụ:
-```sh
-INCRBY age 10
-```
-
--> Giả sử `age` có giá trị `"10"`, kết quả trả về: `20` (lưu dưới dạng `"20"`).
-
----
-
-### 2.4. Lệnh `DECRBY`
-
-Cú pháp:
-```sh
-DECRBY key decrement
-```
-
--> Mô tả: Giảm giá trị số của key xuống một số nguyên `decrement`. Nếu key không tồn tại, Redis khởi tạo giá trị là `0` rồi giảm.
-
-Ví dụ:
-```sh
-DECRBY age 12
-```
-
--> Giả sử `age` có giá trị `"20"`, kết quả trả về: `8` (lưu dưới dạng `"8"`).
-
----
-
-### 2.5. Lệnh `INCRBYFLOAT`
-
-Cú pháp:
-```sh
-INCRBYFLOAT key increment
-```
-
--> Mô tả: Tăng giá trị số của key lên một số thập phân `increment`. Nếu key không tồn tại, Redis khởi tạo giá trị là `0` rồi tăng.
-
-Ví dụ:
-```sh
-INCRBYFLOAT age 6.400145
-```
-
--> Giả sử `age` có giá trị `"10"`, kết quả trả về: `16.400145` (lưu dưới dạng `"16.400145"`).
+-> Mô tả: Lấy giá trị hiện tại (ví dụ: `"20"`), tăng thủ công lên `21`, rồi đặt lại. Nếu hai yêu cầu đồng thời, cả hai sẽ đọc `"20"`, tăng lên `21`, và ghi đè, dẫn đến kết quả sai (`21` thay vì `22`).
 
 ---
 
 ## 💡 3. Use Case Thực Tế
 
-- Đếm số lượt truy cập:
+Cập nhật số upvote bài post:
   ```sh
-  INCR visits
+  INCR upvotes
   ```
 
-- Giảm số lượng hàng tồn kho:
-  ```sh
-  DECRBY stock 5
-  ```
-
-- Tính điểm số với số thập phân:
-  ```sh
-  INCRBYFLOAT score 2.5
-  ```
+-> Với `upvotes` ban đầu là `"20"`, hai yêu cầu đồng thời sẽ tăng đúng lên `22` nhờ tính nguyên tử.
 
 ---
 
 ## 📌 4. Tóm Tắt
 
-✅ `INCR`: Tăng giá trị số lên 1.
+✅ `INCR`: Tăng giá trị số nguyên tử lên 1, đảm bảo chính xác trong môi trường đồng thời.
 
-✅ `DECR`: Giảm giá trị số xuống 1.
+✅ `GET + SET`: Phương pháp thủ công, dễ sai lệch khi nhiều người dùng đồng thời.
 
-✅ `INCRBY`: Tăng giá trị số lên một số nguyên.
+✅ **Use Case**: Cập nhật số lượng upvote, đếm lượt truy cập.
 
-✅ `DECRBY`: Giảm giá trị số xuống một số nguyên.
-
-✅ `INCRBYFLOAT`: Tăng giá trị số lên một số thập phân.
-
-✅ **Lưu ý**: Số được lưu dưới dạng chuỗi, lỗi nếu key không chứa giá trị số hợp lệ.
-
-✅ **Use Case**: Đếm lượt truy cập, quản lý kho, tính điểm số.
+✅ **Lợi ích**: Tận dụng luồng đơn và tính đồng bộ của Redis.
 
 ---
