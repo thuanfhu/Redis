@@ -1,52 +1,63 @@
-# 🛠️ Redis Design Methodology
+# 🔑 Key Naming Methodology
 
-## 📝 1. Tổng Quan Về Phương Pháp Thiết Kế Redis
+## 📝 1. Tổng Quan Về Đặt Tên Key
 
-`Phương pháp thiết kế cho Redis` tập trung vào tối ưu hóa dữ liệu để đáp ứng các truy vấn hiệu quả, khác biệt so với phương pháp SQL truyền thống. Redis yêu cầu xác định rõ nhu cầu truy vấn và các yếu tố thiết kế (design considerations) trước khi cấu trúc dữ liệu.
+`Đặt tên key trong Redis` là yếu tố quan trọng để đảm bảo tính duy nhất và dễ hiểu. Key cần được `thiết kế rõ ràng, hỗ trợ truy vấn hiệu quả, và tránh lỗi đánh máy` bằng cách sử dụng các hàm tạo key.
 
-| **Bước**                | **Mô Tả**                     |
-|--------------------------|--------------------------------|
-| Xác định truy vấn        | Xác định các truy vấn cần thiết |
-| Cấu trúc dữ liệu         | Tối ưu hóa dữ liệu cho truy vấn |
+| **Nguyên Tắc**           | **Mô Tả**                          |
+|---------------------------|------------------------------------|
+| Duy nhất                  | Mỗi key phải là duy nhất          |
+| Dễ hiểu                   | Khác kỹ sư khác hiểu được mục đích|
+| Sử dụng hàm tạo key       | Tránh lỗi đánh máy                |
+| Tách phần bằng dấu ':'    | Phân tách các thành phần key      |
 
 ---
 
-## ⚙️ 2. Quy Trình Thiết Kế và Design Considerations
+## ⚙️ 2. Quy Tắc Đặt Tên Key
 
-### 2.1. So Sánh Với SQL
+### 2.1. Tính Duy Nhất và Dễ Hiểu
 
-- **SQL Database Design Methodology**:
+- Key phải duy nhất trong Redis.
 
-  1. Đặt dữ liệu vào bảng.
+- Ví dụ: `users:45`, `items:19`.
 
-  2. Xác định cách truy vấn dữ liệu.
+- Mục đích: Khác kỹ sư dễ nhận biết `users:45` là thông tin người dùng có ID 45.
 
-- **Redis Design Methodology**:
+### 2.2. Sử Dụng Hàm Tạo Key
 
-  1. Xác định các truy vấn cần trả lời.
+- **Mẹo**: Sử dụng hàm để tạo tên key, tránh lỗi thủ công.
 
-  2. Cấu trúc dữ liệu để tối ưu hóa các truy vấn đó.
+### 2.3. Tách Thành Phần Bằng Dấu ':''
 
-### 2.2. Design Considerations
+- Thực hành phổ biến: Dùng `:` để phân tách các phần của key.
 
-- **Loại dữ liệu**: Redis chủ yếu lưu trữ chuỗi (strings).
+- Ví dụ: `users:45`, `users:posts:901`, `items:19`, `posts:jqip25jnm`
 
-- **Kích thước dữ liệu**: Đánh giá liệu cần quan tâm đến kích thước dữ liệu không.
+### 2.4. Biến Thể Tối Ưu Tìm Kiếm
 
-- **Hết hạn dữ liệu**: Xác định có cần thiết lập thời gian hết hạn (expiration) không.
+- **Biến thể**: Sử dụng `#` trước ID duy nhất để dễ tìm kiếm.
 
-- **Chính sách đặt tên key**: Quy định cách đặt tên key (ví dụ: `users:45`).
+- Ví dụ: `users#45`, `users:posts#901`, `items#19`, `posts#jqip25jnm`
 
-- **Yêu cầu logic nghiệp vụ**: Xem xét các yêu cầu đặc thù của ứng dụng.
+### 2.5. Ứng Dụng Thực Tế: Cache Trang
+
+| **Key**                    | **Giá trị**         |
+|----------------------------|---------------------|
+| `pagecache#/about`         | `<html></html>`     |
+| `pagecache#/privacy`       | `<html></html>`     |
+| `pagecache#/auth/signin`   | `<html></html>`     |
+| `pagecache#/auth/signup`   | `<html></html>`     |
 
 ---
 
 ## 📌 3. Tóm Tắt
 
-✅ Redis ưu tiên xác định truy vấn và các yếu tố thiết kế trước khi cấu trúc dữ liệu.
+✅ Key phải duy nhất và dễ hiểu cho mọi kỹ sư.
 
-✅ Khác biệt với SQL, tập trung vào hiệu suất truy vấn thay vì bảng cố định.
+✅ Sử dụng hàm tạo key để tránh lỗi.
 
-✅ **Use Case**: Tối ưu hóa truy vấn nhanh, quản lý dữ liệu tạm thời.
+✅ Dùng `:` để tách phần, hoặc `#` trước ID để tối ưu tìm kiếm.
+
+✅ **Use Case**: Quản lý dữ liệu người dùng, cache trang web.
 
 ---
