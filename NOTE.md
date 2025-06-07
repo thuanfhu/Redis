@@ -41,17 +41,7 @@
 
 ---
 
-## 💡 3. Use Case Thực Tế
-
-- Xác định truy vấn: Lấy thông tin người dùng theo ID.
-
-- Cấu trúc dữ liệu: Sử dụng key `user:{id}` với giá trị chuỗi JSON.
-
-- Thiết kế: Đặt thời gian hết hạn 1 giờ cho dữ liệu tạm thời.
-
----
-
-## 📌 4. Tóm Tắt
+## 📌 3. Tóm Tắt
 
 ✅ Redis ưu tiên xác định truy vấn và các yếu tố thiết kế trước khi cấu trúc dữ liệu.
 
