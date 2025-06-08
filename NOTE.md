@@ -1,81 +1,79 @@
-# 🗃️ Storing and Retrieving Hashes
+# 🗑️ Deleting Hash Data
 
-## 📝 1. Tổng Quan Về Hash Trong Redis
+## 📝 1. Tổng Quan Về Xóa Dữ Liệu Hash
 
-Redis sử dụng Hash để lưu trữ các cặp key-value (field-value) trong một key duy nhất, phù hợp cho việc quản lý dữ liệu có cấu trúc như thông tin công ty. Các lệnh `HSET`, `HGET`, và `HGETALL` hỗ trợ lưu và truy xuất dữ liệu hiệu quả.
+Redis cung cấp các lệnh `HEXISTS`, `DEL`, và `HDEL` để kiểm tra và xóa dữ liệu trong hash. `HEXISTS` kiểm tra sự tồn tại của field, `DEL` xóa toàn bộ hash, và `HDEL` xóa một cặp key-value cụ thể.
 
-| **Lệnh**   | **Mô Tả**                  |
-|------------|-----------------------------|
-| `HSET`     | Lưu cặp field-value vào hash|
-| `HGET`     | Lấy một field từ hash      |
-| `HGETALL`  | Lấy tất cả field-value     |
+| **Lệnh**    | **Mô Tả**                  |
+|-------------|-----------------------------|
+| `HEXISTS`   | Kiểm tra field tồn tại     |
+| `DEL`       | Xóa toàn bộ hash           |
+| `HDEL`      | Xóa một cặp key-value      |
 
 ---
 
 ## ⚙️ 2. Cú Pháp và Cách Sử Dụng
 
-### 2.1. Lệnh `HSET` - Lưu Hash
+### 2.1. Lệnh `HEXISTS` - Kiểm Tra Tồn Tại
 
 - Cú pháp:
 
   ```sh
-  HSET key field value [field value ...]
+  HEXISTS key field
   ```
 
 - Ví dụ (dựa trên ảnh):
 
   ```sh
-  HSET company name "Company Co" age 1915
-  ```
-
-  -> Lưu hash `company` với cặp `name: "Company Co"` và `age: 1915`.
-
----
-
-### 2.2. Lệnh `HGET` - Truy Xuất Một Field
-
-- Cú pháp:
-
-  ```sh
-  HGET key field
-  ```
-
-- Ví dụ (dựa trên ảnh):
-
-  ```sh
-  HGET company name
-  ```
-
-  -> Kết quả: `"Company Co"`.
-
----
-
-### 2.3. Lệnh `HGETALL` - Truy Xuất Tất Cả
-
-- Cú pháp:
-
-  ```sh
-  HGETALL key
-  ```
-
-- Ví dụ (dựa trên ảnh):
-
-  ```sh
-  HGETALL company
+  HEXISTS company age
   ```
   
-  -> Kết quả: `[name, "Company Co", age, 1915]`.
+  -> Kết quả: `1` (tồn tại), `0` (không tồn tại).
+
+---
+
+### 2.2. Lệnh `DEL` - Xóa Toàn Bộ Hash
+
+- Cú pháp:
+
+  ```sh
+  DEL key
+  ```
+
+- Ví dụ (dựa trên ảnh):
+
+  ```sh
+  DEL company
+  ```
+  
+  -> Xóa toàn bộ hash `company` (bao gồm `name` và `age`).
+
+---
+
+### 2.3. Lệnh `HDEL` - Xóa Một Cặp Key-Value
+
+- Cú pháp:
+
+  ```sh
+  HDEL key field [field ...]
+  ```
+
+- Ví dụ (dựa trên ảnh):
+
+  ```sh
+  HDEL company age
+  ```
+  
+  -> Xóa cặp `age: 1915` khỏi hash `company`.
 
 ---
 
 ## 📌 3. Tóm Tắt
 
-✅ `HSET` tạo và lưu cặp field-value vào hash.
+✅ `HEXISTS` kiểm tra sự tồn tại của field (trả về `1` hoặc `0`).
 
-✅ `HGET` lấy giá trị của một field cụ thể.
+✅ `DEL` xóa toàn bộ hash theo key.
 
-✅ `HGETALL` lấy toàn bộ cặp field-value.
-
-✅ **Use Case**: Quản lý thông tin có cấu trúc như công ty, người dùng.
+✅ `HDEL` xóa một hoặc nhiều cặp key-value trong hash.
 
 ---
