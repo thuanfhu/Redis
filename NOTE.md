@@ -1,67 +1,81 @@
-# 🗃️ Hashes in Redis
+# 🗃️ Storing and Retrieving Hashes
 
-## 📝 1. Tổng Quan Về Hashes
+## 📝 1. Tổng Quan Về Hash Trong Redis
 
-Redis hỗ trợ kiểu dữ liệu `Hash để lưu trữ các cặp field-value trong một key duy nhất`, phù hợp để quản lý thông tin như người dùng hoặc bài đăng. Mỗi hash chứa các trường (fields) và giá trị, không hỗ trợ lồng nhau (nested).
+Redis sử dụng Hash để lưu trữ các cặp key-value (field-value) trong một key duy nhất, phù hợp cho việc quản lý dữ liệu có cấu trúc như thông tin công ty. Các lệnh `HSET`, `HGET`, và `HGETALL` hỗ trợ lưu và truy xuất dữ liệu hiệu quả.
 
-| **Đặc Điểm**      | **Mô Tả**                       |
-|--------------------|---------------------------------|
-| Cấu trúc           | Key → {field1: value1, ...}    |
-| Không lồng nhau    | Không hỗ trợ nested hash       |
-| Ví dụ đúng         | `user#3` với `name: alex`      |
-
-⚠️ **Lưu ý**: Nested JSON (như `{"industry": [{"primary": "materials"}, {"secondary": "concrete"}]}`) không được hỗ trợ; chỉ dùng cấu trúc phẳng.
+| **Lệnh**   | **Mô Tả**                  |
+|------------|-----------------------------|
+| `HSET`     | Lưu cặp field-value vào hash|
+| `HGET`     | Lấy một field từ hash      |
+| `HGETALL`  | Lấy tất cả field-value     |
 
 ---
 
 ## ⚙️ 2. Cú Pháp và Cách Sử Dụng
 
-### 2.1. Tạo và Truy Xuất Hash
+### 2.1. Lệnh `HSET` - Lưu Hash
 
 - Cú pháp:
+
   ```sh
-  HSET key field value
+  HSET key field value [field value ...]
+  ```
+
+- Ví dụ (dựa trên ảnh):
+
+  ```sh
+  HSET company name "Company Co" age 1915
+  ```
+
+  -> Lưu hash `company` với cặp `name: "Company Co"` và `age: 1915`.
+
+---
+
+### 2.2. Lệnh `HGET` - Truy Xuất Một Field
+
+- Cú pháp:
+
+  ```sh
   HGET key field
   ```
 
-- Ví dụ đúng (`user#3` từ ảnh):
-  ```sh
-  HSET user#3 name alex
-  HSET user#3 password alskjdjf3414
-  HGET user#3 name
-  ```
-  -> Kết quả: `alex`
+- Ví dụ (dựa trên ảnh):
 
-- Ví dụ đúng (`post#9` từ ảnh):
   ```sh
-  HSET post#9 title "A Blog Post"
-  HSET post#9 content "Everything about.."
-  HGET post#9 title
+  HGET company name
   ```
-  -> Kết quả: `A Blog Post`
+
+  -> Kết quả: `"Company Co"`.
 
 ---
 
-## 💡 3. Use Case Thực Tế
+### 2.3. Lệnh `HGETALL` - Truy Xuất Tất Cả
 
-- Quản lý thông tin người dùng:
+- Cú pháp:
+
   ```sh
-  HSET user#3 name alex password alskjdjf3414
+  HGETALL key
   ```
 
-- Lưu trữ bài đăng:
+- Ví dụ (dựa trên ảnh):
+
   ```sh
-  HSET post#9 title "A Blog Post" content "Everything about.."
+  HGETALL company
   ```
+  
+  -> Kết quả: `[name, "Company Co", age, 1915]`.
 
 ---
 
-## 📌 4. Tóm Tắt
+## 📌 3. Tóm Tắt
 
-✅ Hash lưu trữ các cặp field-value trong một key duy nhất.
+✅ `HSET` tạo và lưu cặp field-value vào hash.
 
-✅ Không hỗ trợ cấu trúc lồng nhau; chỉ dùng cấu trúc phẳng.
+✅ `HGET` lấy giá trị của một field cụ thể.
 
-✅ **Use Case**: Quản lý thông tin người dùng, bài đăng.
+✅ `HGETALL` lấy toàn bộ cặp field-value.
+
+✅ **Use Case**: Quản lý thông tin có cấu trúc như công ty, người dùng.
 
 ---
